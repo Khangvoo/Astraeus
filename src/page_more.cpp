@@ -599,7 +599,7 @@ void DrawTools(PageCtx& p) {
     bool tall = Height(a) > Width(a); // sidebar: timer and tiles stack under the power row
     D2D1_RECT_F timer = tall ? Rect(a.left, power.bottom + 12, Width(a), 190) : Rect(a.left, power.bottom + 12, kTimerW, a.bottom - power.bottom - 12);
     w::Card(ui, t, timer);
-    static const wchar_t* kTabs[Model::kToolTabs] = {L"TIMER", L"STOPWATCH", L"FOCUS", L"ALARM", L"TO-DO", L"SERVERS"};
+    static const wchar_t* kTabs[Model::kToolTabs] = {L"TIMER", L"STOPWATCH", L"FOCUS", L"ALARM", L"TO-DO", L"SERVERS", L"WATER"};
     float avail = Width(timer) - 40, fontSz = 10, sp = 1.4f, tabGap = 14;
     float widths[Model::kToolTabs]{}, tabW = 0;
     auto measure = [&]() {
@@ -637,6 +637,8 @@ void DrawTools(PageCtx& p) {
         Focus(p, timer, tall);
     } else if (m.toolTab == Model::kTabAlarm) {
         AlarmTab(p, listArea);
+    } else if (m.toolTab == Model::kTabWater) {
+        WaterTab(p, listArea);
     } else if (!m.timerOn) {
         const int minutes[] = {1, 5, 10, 15, 25, 45, 60};
         int perRow = tall ? 4 : 7; // sidebar: two rows so the labels fit

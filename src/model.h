@@ -157,8 +157,8 @@ public:
     float pingMs = -2, jitterMs = 0; // latency to the internet while the network page shows; -1 no answer, -2 not measured
     Hist pingHist{60};
     // stopwatch and focus sessions, on the timer's own once-a-second tick
-    int toolTab = 0; // 0 timer, 1 stopwatch, 2 focus, 3 alarm, 4 to-do, 5 servers
-    enum ToolTab { kTabTimer, kTabWatch, kTabFocus, kTabAlarm, kTabTodo, kTabHosts, kToolTabs };
+    int toolTab = 0; // 0 timer, 1 stopwatch, 2 focus, 3 alarm, 4 to-do, 5 servers, 6 water
+    enum ToolTab { kTabTimer, kTabWatch, kTabFocus, kTabAlarm, kTabTodo, kTabHosts, kTabWater, kToolTabs };
     struct Todo {
         std::wstring text;
         bool done = false;

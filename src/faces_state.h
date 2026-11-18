@@ -29,7 +29,15 @@ const std::vector<double>& WatchLaps();
 int Today(); // yyyymmdd
 int Water();
 int WaterGoal();
-void WaterAdd(int by);
+void WaterAdd(int by); // a sip also restarts the reminder's clock
+void SetWaterGoal(int glasses);
+int WaterGlassMl(); // one glass, in ml
+void SetWaterGlassMl(int ml);
+int WaterRemindMin(); // minutes between reminders, 0 is off (the default)
+void SetWaterRemindMin(int minutes);
+void WaterWindow(int& from, int& to); // the hours it reminds in; from == to is all day
+void SetWaterWindow(int from, int to);
+bool WaterDue(); // once a second: a reminder is due now
 
 struct Habit {
     std::wstring name;

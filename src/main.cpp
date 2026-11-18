@@ -13,6 +13,7 @@
 #include "backup.h"
 #include "config.h"
 #include "drawer.h"
+#include "faces_state.h"
 #include "gfx.h"
 #include "model.h"
 #include "glyphs.h"
@@ -431,6 +432,12 @@ LRESULT CALLBACK HostProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
                 MessageBeep(MB_ICONASTERISK);
                 app->drawer->Peek(L"Timer finished", detail); // in-app drop banner
                 Notify(L"Timer finished", detail.c_str()); // plus system toast
+            }
+            if (faces::state::WaterDue() && !app->model->quiet) { // a drink-water reminder; do not disturb keeps it quiet
+                std::wstring detail = std::to_wstring(faces::state::Water()) + L" of " + std::to_wstring(faces::state::WaterGoal()) + L" glasses today";
+                MessageBeep(MB_ICONASTERISK);
+                app->drawer->Peek(L"Time for water", detail, glyph::Coffee);
+                Notify(L"Time for water", detail.c_str());
             }
             if (app->model->TickAlarms()) {
                 app->model->alarmBellTick = 0;

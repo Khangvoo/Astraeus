@@ -5,11 +5,13 @@
 
 #include <algorithm>
 #include <cmath>
+#include <ctime>
 #include <map>
 #include <thread>
 
 #include "feeds.h"
 #include "glyphs.h"
+#include "water.h"
 
 #pragma comment(lib, "uuid.lib")
 
@@ -193,10 +195,67 @@ int WaterGoal() {
     return g > 0 ? g : kDefaultGoal;
 }
 
+namespace {
+long long waterLast = 0; // the wall-clock second of the last reminder or sip, 0: the clock isn't running
+struct WaterPrefs { // the reminder's settings, read once: Due() runs every second and these live in the registry
+    bool read = false;
+    int every = 0, from = water::kDefaultFrom, to = water::kDefaultTo, glassMl = water::kDefaultGlassMl;
+};
+WaterPrefs waterPrefs;
+
+const WaterPrefs& WaterRead() {
+    if (!waterPrefs.read) {
+        std::wstring e = feeds::Setting("water.remind"), f = feeds::Setting("water.from"), t = feeds::Setting("water.to"), g = feeds::Setting("water.ml");
+        waterPrefs.every = (std::clamp)(_wtoi(e.c_str()), 0, 600); // unset: off
+        if (!f.empty() && !t.empty()) waterPrefs.from = (std::clamp)(_wtoi(f.c_str()), 0, 23), waterPrefs.to = (std::clamp)(_wtoi(t.c_str()), 0, 24);
+        int ml = _wtoi(g.c_str());
+        waterPrefs.glassMl = ml >= 50 && ml <= 2000 ? ml : water::kDefaultGlassMl;
+        waterPrefs.read = true;
+    }
+    return waterPrefs;
+}
+} // namespace
+
 void WaterAdd(int by) {
     int next = (std::clamp)(Water() + by, 0, 99);
     feeds::SetSetting("water.count", std::to_wstring(next));
     feeds::SetSetting("water.day", std::to_wstring(Today()));
+    if (by > 0 && waterLast != 0) waterLast = (long long)std::time(nullptr); // a sip: the next reminder is a whole interval away
+}
+
+void SetWaterGoal(int glasses) { feeds::SetSetting("water.goal", std::to_wstring((std::clamp)(glasses, 1, 99))); }
+
+int WaterGlassMl() { return WaterRead().glassMl; }
+
+void SetWaterGlassMl(int ml) {
+    feeds::SetSetting("water.ml", std::to_wstring((std::clamp)(ml, 50, 2000)));
+    waterPrefs.read = false;
+}
+
+int WaterRemindMin() { return WaterRead().every; }
+
+void SetWaterRemindMin(int minutes) {
+    feeds::SetSetting("water.remind", std::to_wstring((std::clamp)(minutes, 0, 600)));
+    waterPrefs.read = false;
+    waterLast = 0; // a new interval starts its own clock
+}
+
+void WaterWindow(int& from, int& to) {
+    from = WaterRead().from;
+    to = WaterRead().to;
+}
+
+void SetWaterWindow(int from, int to) {
+    feeds::SetSetting("water.from", std::to_wstring((std::clamp)(from, 0, 23)));
+    feeds::SetSetting("water.to", std::to_wstring((std::clamp)(to, 0, 24)));
+    waterPrefs.read = false;
+}
+
+bool WaterDue() {
+    const WaterPrefs& p = WaterRead();
+    SYSTEMTIME st;
+    GetLocalTime(&st);
+    return water::Due(waterLast, (long long)std::time(nullptr), st.wHour, p.every, p.from, p.to, [] { return Water() >= WaterGoal(); });
 }
 
 std::vector<Habit> Habits() {
